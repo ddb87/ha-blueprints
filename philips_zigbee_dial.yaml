@@ -9,7 +9,7 @@ blueprint:
       name: Philips Hue Tap Switch
       selector:
         device:
-          integration: zigbee2mqtt
+          integration: mqtt
           manufacturer: Philips
     first_light:
       name: First Light
