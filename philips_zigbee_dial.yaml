@@ -9,7 +9,7 @@ blueprint:
       name: Philips Hue Tap Switch
       selector:
         device:
-          integration: zha
+          integration: zigbee2mqtt
           manufacturer: Signify Netherlands B.V.
           model: RDM002
     first_light:
@@ -73,21 +73,19 @@ variables:
     forth_light: !input "forth_light"
 trigger:
   - platform: event
-    event_type: zha_event
+    event_type: zigbee2mqtt_event
     event_data:
       device_id: !input "remote"
 action:
   - variables:
-      command: "{{ trigger.event.data.command }}"
-      args: '{% if (trigger.event.data.args is defined) %}{{trigger.event.data.args}}{% endif %}'
-      params: '{% if (trigger.event.data.params is defined) %}{{trigger.event.data.params}}{% endif %}'
-      step_size: '{% if (trigger.event.data.params is defined) and (trigger.event.data.params.step_size is defined) %}{{trigger.event.data.params.step_size}}{% endif %}'
-      step_mode: '{% if (trigger.event.data.params is defined) and (trigger.event.data.params.step_mode is defined) %}{{trigger.event.data.params.step_mode}}{% endif %}'
-      scene: '{% if (trigger.event.data.params is defined) and (trigger.event.data.params.scene_id is defined) %}{{trigger.event.data.params.scene_id}}{% endif %}'
+      action: "{{ trigger.event.data.action }}"
+      step_size: "{{ trigger.event.data.step_size | default(1) }}"
+      step_mode: "{{ trigger.event.data.step_mode | default('up') }}"
+      button: "{{ trigger.event.data.button | default(1) }}"
   - choose:
       - conditions:
-          - "{{ command == 'recall' }}"
-          - "{{ scene == 1 }}"
+          - "{{ action == 'recall' }}"
+          - "{{ button == 1 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "first_light"
@@ -100,9 +98,9 @@ action:
                     data:
                       value: first_light
       - conditions:
-          - "{{ command == 'recall' }}"
+          - "{{ action == 'recall' }}"
           - "{{ second_light != none }}"
-          - "{{ scene == 0 }}"
+          - "{{ button == 2 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "second_light"
@@ -115,9 +113,9 @@ action:
                     data:
                       value: second_light
       - conditions:
-          - "{{ command == 'recall' }}"
+          - "{{ action == 'recall' }}"
           - "{{ third_light != none }}"
-          - "{{ scene == 5 }}"
+          - "{{ button == 3 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "third_light"
@@ -130,9 +128,9 @@ action:
                     data:
                       value: third_light
       - conditions:
-          - "{{ command == 'recall' }}"
+          - "{{ action == 'recall' }}"
           - "{{ forth_light != none }}"
-          - "{{ scene == 4 }}"
+          - "{{ button == 4 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "forth_light"
@@ -145,8 +143,8 @@ action:
                     data:
                       value: forth_light
       - conditions:
-          - "{{ command == 'step_with_on_off' }}"
-          - "{{ step_mode == 'StepMode.Up' }}"
+          - "{{ action == 'step' }}"
+          - "{{ step_mode == 'up' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -163,8 +161,8 @@ action:
                   brightness_step_pct: "{{ step_size * dim_scale }}"
                   transition: 1
       - conditions:
-          - "{{ command == 'step_with_on_off' }}"
-          - "{{ step_mode == 'StepMode.Down' }}"
+          - "{{ action == 'step' }}"
+          - "{{ step_mode == 'down' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
