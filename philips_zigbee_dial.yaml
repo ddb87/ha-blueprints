@@ -5,12 +5,9 @@ blueprint:
     '
   domain: automation
   input:
-    remote:
-      name: Philips Hue Tap Switch
-      selector:
-        device:
-          integration: mqtt
-          manufacturer: Philips
+    mqtt_topic:
+      name: MQTT Topic for device updates
+      description: MQTT topic for Philips Hue Tap dial switch. e.g. "zigbee2mqtt/Hue Dial Switch woonkamer"
     first_light:
       name: First Light
       description: The light(s) to control with first button
@@ -55,7 +52,6 @@ blueprint:
           min: 0.0
           max: 5.0
           step: 0.01
-  source_url: https://github.com/apollo1220/blueprints/blob/main/philips_zigbee_dial.yaml
 mode: restart
 max_exceeded: silent
 variables:
@@ -71,20 +67,18 @@ variables:
     third_light: !input "third_light"
     forth_light: !input "forth_light"
 trigger:
-  - platform: event
-    event_type: zigbee2mqtt_event
-    event_data:
-      device_id: !input "remote"
+  - platform: mqtt
+    topic: !input mqtt_topic
+    value_template: "{{ value_json.action }}"
 action:
   - variables:
-      action: "{{ trigger.event.data.action }}"
-      step_size: "{{ trigger.event.data.step_size | default(1) }}"
-      step_mode: "{{ trigger.event.data.step_mode | default('up') }}"
-      button: "{{ trigger.event.data.button | default(1) }}"
+      action: "{{ trigger.payload }}"
+      step_size: "{{ trigger.payload_json.step_size | default(1) }}"
+      step_mode: "{{ trigger.payload_json.step_mode | default('up') }}"
+      button: "{{ trigger.payload_json.button | default(1) }}"
   - choose:
       - conditions:
-          - "{{ action == 'recall' }}"
-          - "{{ button == 1 }}"
+          - "{{ action == 'button_1_press' }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "first_light"
@@ -97,9 +91,8 @@ action:
                     data:
                       value: first_light
       - conditions:
-          - "{{ action == 'recall' }}"
+          - "{{ action == 'button_2_press' }}"
           - "{{ second_light != none }}"
-          - "{{ button == 2 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "second_light"
@@ -112,9 +105,8 @@ action:
                     data:
                       value: second_light
       - conditions:
-          - "{{ action == 'recall' }}"
+          - "{{ action == 'button_3_press' }}"
           - "{{ third_light != none }}"
-          - "{{ button == 3 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "third_light"
@@ -127,9 +119,8 @@ action:
                     data:
                       value: third_light
       - conditions:
-          - "{{ action == 'recall' }}"
+          - "{{ action == 'button_4_press' }}"
           - "{{ forth_light != none }}"
-          - "{{ button == 4 }}"
         sequence:
           - service: homeassistant.toggle
             target: !input "forth_light"
@@ -142,8 +133,7 @@ action:
                     data:
                       value: forth_light
       - conditions:
-          - "{{ action == 'step' }}"
-          - "{{ step_mode == 'up' }}"
+          - "{{ action == 'dial_rotate_right_step' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -160,8 +150,7 @@ action:
                   brightness_step_pct: "{{ step_size * dim_scale }}"
                   transition: 1
       - conditions:
-          - "{{ action == 'step' }}"
-          - "{{ step_mode == 'down' }}"
+          - "{{ action == 'dial_rotate_left_step' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
