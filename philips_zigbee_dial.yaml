@@ -71,6 +71,10 @@ trigger:
     topic: !input mqtt_topic
     value_template: "{{ value_json.action }}"
 action:
+  - service: persistent_notification.create
+    data:
+      message: "Action received: {{ trigger.payload }}"
+      title: "Tap Dial Debug"
   - variables:
       action: "{{ trigger.payload }}"
       step_size: "{{ trigger.payload_json.step_size | default(1) }}"
@@ -80,7 +84,7 @@ action:
       - conditions:
           - "{{ action == 'button_1_single_press' }}"
         sequence:
-          - service: homeassistant.toggle
+          - service: light.toggle
             target: !input "first_light"
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -94,7 +98,7 @@ action:
           - "{{ action == 'button_2_single_press' }}"
           - "{{ second_light != none }}"
         sequence:
-          - service: homeassistant.toggle
+          - service: light.toggle
             target: !input "second_light"
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -108,7 +112,7 @@ action:
           - "{{ action == 'button_3_single_press' }}"
           - "{{ third_light != none }}"
         sequence:
-          - service: homeassistant.toggle
+          - service: light.toggle
             target: !input "third_light"
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -122,7 +126,7 @@ action:
           - "{{ action == 'button_4_single_press' }}"
           - "{{ forth_light != none }}"
         sequence:
-          - service: homeassistant.toggle
+          - service: light.toggle
             target: !input "forth_light"
           - choose:
               - conditions: "{{ current_light != none }}"
