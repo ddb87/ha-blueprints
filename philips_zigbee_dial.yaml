@@ -70,10 +70,6 @@ trigger:
   - platform: mqtt
     topic: !input mqtt_topic
 action:
-  - service: persistent_notification.create
-    data:
-      message: "Action received: {{ trigger.payload }}"
-      title: "Tap Dial Debug"
   - variables:
       action: "{{ trigger.payload_json.action }}"
       step_size: "{{ trigger.payload_json.action_step_size | default(1) }}"
@@ -149,10 +145,6 @@ action:
                 {% else %}
                   2
                 {% endif %}
-          - service: persistent_notification.create
-            data:
-              message: "Brightness step up: {{ step_pct }}%"
-              title: "Tap Dial Debug"
           - choose:
               - conditions: "{{ current_light != none }}"
                 sequence:
@@ -181,10 +173,6 @@ action:
                 {% else %}
                   -2
                 {% endif %}
-          - service: persistent_notification.create
-            data:
-              message: "Brightness step down: {{ step_pct }}%"
-              title: "Tap Dial Debug"
           - choose:
               - conditions: "{{ current_light != none }}"
                 sequence:
