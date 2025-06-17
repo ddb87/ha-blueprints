@@ -136,7 +136,7 @@ action:
                     data:
                       value: forth_light
       - conditions:
-          - "{{ action == 'dial_rotate_right' }}"
+          - "{{ action == 'brightness_step_up' or action == 'dial_rotate_right_slow' or action == 'dial_rotate_right_fast' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -144,16 +144,16 @@ action:
                   - service: light.turn_on
                     target: "{{ lights[states(current_light)] }}"
                     data:
-                      brightness_step_pct: "{{ step_size * dim_scale }}"
+                      brightness_step_pct: "{{ (action == 'brightness_step_up' and step_size) or (action == 'dial_rotate_right_slow' and 5) or (action == 'dial_rotate_right_fast' and 10) }}"
                       transition: 1
             default:
               - service: light.turn_on
                 target: !input "first_light"
                 data:
-                  brightness_step_pct: "{{ step_size * dim_scale }}"
+                  brightness_step_pct: "{{ (action == 'brightness_step_up' and step_size) or (action == 'dial_rotate_right_slow' and 5) or (action == 'dial_rotate_right_fast' and 10) }}"
                   transition: 1
       - conditions:
-          - "{{ action == 'dial_rotate_left' }}"
+          - "{{ action == 'brightness_step_down' or action == 'dial_rotate_left_slow' or action == 'dial_rotate_left_fast' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -161,11 +161,11 @@ action:
                   - service: light.turn_on
                     target: "{{ lights[states(current_light)] }}"
                     data:
-                      brightness_step_pct: "{{ -step_size * dim_scale }}"
+                      brightness_step_pct: "{{ (action == 'brightness_step_down' and -step_size) or (action == 'dial_rotate_left_slow' and -5) or (action == 'dial_rotate_left_fast' and -10) }}"
                       transition: 1
             default:
               - service: light.turn_on
                 target: !input "first_light"
                 data:
-                  brightness_step_pct: "{{ -step_size * dim_scale }}"
+                  brightness_step_pct: "{{ (action == 'brightness_step_down' and -step_size) or (action == 'dial_rotate_left_slow' and -5) or (action == 'dial_rotate_left_fast' and -10) }}"
                   transition: 1
