@@ -136,36 +136,66 @@ action:
                     data:
                       value: forth_light
       - conditions:
-          - "{{ action == 'brightness_step_up' or action == 'dial_rotate_right_slow' or action == 'dial_rotate_right_fast' }}"
+          - "{{ action == 'brightness_step_up' or action == 'dial_rotate_right_slow' or action == 'dial_rotate_right_fast' or action == 'dial_rotate_right_step' }}"
         sequence:
+          - variables:
+              step_pct: >-
+                {% if action == 'brightness_step_up' %}
+                  {{ step_size }}
+                {% elif action == 'dial_rotate_right_slow' %}
+                  5
+                {% elif action == 'dial_rotate_right_fast' %}
+                  10
+                {% else %}
+                  2
+                {% endif %}
+          - service: persistent_notification.create
+            data:
+              message: "Brightness step up: {{ step_pct }}%"
+              title: "Tap Dial Debug"
           - choose:
               - conditions: "{{ current_light != none }}"
                 sequence:
                   - service: light.turn_on
                     target: "{{ lights[states(current_light)] }}"
                     data:
-                      brightness_step_pct: "{{ (action == 'brightness_step_up' and step_size) or (action == 'dial_rotate_right_slow' and 5) or (action == 'dial_rotate_right_fast' and 10) }}"
+                      brightness_step_pct: "{{ step_pct }}"
                       transition: 1
             default:
               - service: light.turn_on
                 target: !input "first_light"
                 data:
-                  brightness_step_pct: "{{ (action == 'brightness_step_up' and step_size) or (action == 'dial_rotate_right_slow' and 5) or (action == 'dial_rotate_right_fast' and 10) }}"
+                  brightness_step_pct: "{{ step_pct }}"
                   transition: 1
       - conditions:
-          - "{{ action == 'brightness_step_down' or action == 'dial_rotate_left_slow' or action == 'dial_rotate_left_fast' }}"
+          - "{{ action == 'brightness_step_down' or action == 'dial_rotate_left_slow' or action == 'dial_rotate_left_fast' or action == 'dial_rotate_left_step' }}"
         sequence:
+          - variables:
+              step_pct: >-
+                {% if action == 'brightness_step_down' %}
+                  {{ -step_size }}
+                {% elif action == 'dial_rotate_left_slow' %}
+                  -5
+                {% elif action == 'dial_rotate_left_fast' %}
+                  -10
+                {% else %}
+                  -2
+                {% endif %}
+          - service: persistent_notification.create
+            data:
+              message: "Brightness step down: {{ step_pct }}%"
+              title: "Tap Dial Debug"
           - choose:
               - conditions: "{{ current_light != none }}"
                 sequence:
                   - service: light.turn_on
                     target: "{{ lights[states(current_light)] }}"
                     data:
-                      brightness_step_pct: "{{ (action == 'brightness_step_down' and -step_size) or (action == 'dial_rotate_left_slow' and -5) or (action == 'dial_rotate_left_fast' and -10) }}"
+                      brightness_step_pct: "{{ step_pct }}"
                       transition: 1
             default:
               - service: light.turn_on
                 target: !input "first_light"
                 data:
-                  brightness_step_pct: "{{ (action == 'brightness_step_down' and -step_size) or (action == 'dial_rotate_left_slow' and -5) or (action == 'dial_rotate_left_fast' and -10) }}"
+                  brightness_step_pct: "{{ step_pct }}"
                   transition: 1
