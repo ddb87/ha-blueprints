@@ -69,20 +69,19 @@ variables:
 trigger:
   - platform: mqtt
     topic: !input mqtt_topic
-    value_template: "{{ value_json.action }}"
 action:
   - service: persistent_notification.create
     data:
       message: "Action received: {{ trigger.payload }}"
       title: "Tap Dial Debug"
   - variables:
-      action: "{{ trigger.payload }}"
-      step_size: "{{ trigger.payload_json.step_size | default(1) }}"
-      step_mode: "{{ trigger.payload_json.step_mode | default('up') }}"
-      button: "{{ trigger.payload_json.button | default(1) }}"
+      action: "{{ trigger.payload_json.action }}"
+      step_size: "{{ trigger.payload_json.action_step_size | default(1) }}"
+      step_mode: "{{ trigger.payload_json.action_direction | default('up') }}"
+      button: "{{ trigger.payload_json.action_type | default(1) }}"
   - choose:
       - conditions:
-          - "{{ action == 'button_1_single_press' }}"
+          - "{{ action == 'button_1_press' }}"
         sequence:
           - service: light.toggle
             target: !input "first_light"
@@ -95,7 +94,7 @@ action:
                     data:
                       value: first_light
       - conditions:
-          - "{{ action == 'button_2_single_press' }}"
+          - "{{ action == 'button_2_press' }}"
           - "{{ second_light != none }}"
         sequence:
           - service: light.toggle
@@ -109,7 +108,7 @@ action:
                     data:
                       value: second_light
       - conditions:
-          - "{{ action == 'button_3_single_press' }}"
+          - "{{ action == 'button_3_press' }}"
           - "{{ third_light != none }}"
         sequence:
           - service: light.toggle
@@ -123,7 +122,7 @@ action:
                     data:
                       value: third_light
       - conditions:
-          - "{{ action == 'button_4_single_press' }}"
+          - "{{ action == 'button_4_press' }}"
           - "{{ forth_light != none }}"
         sequence:
           - service: light.toggle
@@ -137,7 +136,7 @@ action:
                     data:
                       value: forth_light
       - conditions:
-          - "{{ action == 'dial_rotate_right_step' or action == 'dial_rotate_right_slow' or action == 'dial_rotate_right_fast' }}"
+          - "{{ action == 'dial_rotate_right' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
@@ -154,7 +153,7 @@ action:
                   brightness_step_pct: "{{ step_size * dim_scale }}"
                   transition: 1
       - conditions:
-          - "{{ action == 'dial_rotate_left_step' or action == 'dial_rotate_left_slow' or action == 'dial_rotate_left_fast' }}"
+          - "{{ action == 'dial_rotate_left' }}"
         sequence:
           - choose:
               - conditions: "{{ current_light != none }}"
